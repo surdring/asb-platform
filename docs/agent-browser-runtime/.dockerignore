@@ -1,9 +1,0 @@
-.git
-.env
-artifacts/**
-data/**
-runtime/profile/**
-node_modules/**
-**/node_modules/**
-.DS_Store
-*.excalidraw
