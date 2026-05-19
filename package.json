@@ -1,0 +1,16 @@
+{
+  "name": "asb-platform",
+  "version": "0.1.0",
+  "description": "Polymorphic shared browser environment and agent skill platform.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "demo": "node examples/run-complete-demo.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

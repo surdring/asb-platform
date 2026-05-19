@@ -1,0 +1,59 @@
+{
+  "id": "demo.market.v1",
+  "name": "Demo Market Collector",
+  "platform": "demo-market",
+  "version": "0.1.0",
+  "description": "A fully local demo skill used by npm run demo. It collects product cards from an embedded HTML page.",
+  "perception": {
+    "productCard": {
+      "selector": "[data-product-card]",
+      "description": "Product card container."
+    },
+    "cartButton": {
+      "selector": "[data-add-cart]",
+      "description": "A demo action button."
+    }
+  },
+  "actions": {
+    "collectProducts": {
+      "steps": [
+        {
+          "type": "waitForSelector",
+          "selector": "productCard",
+          "timeoutMs": 10000
+        },
+        {
+          "type": "evaluate",
+          "name": "products",
+          "expression": "Array.from(document.querySelectorAll('[data-product-card]')).map((el) => ({ id: el.dataset.id, title: el.querySelector('[data-title]')?.textContent.trim(), price: Number(el.querySelector('[data-price]')?.textContent.replace(/[^0-9.]/g, '')), rating: Number(el.querySelector('[data-rating]')?.textContent), source: location.href, capturedAt: new Date().toISOString() }))"
+        }
+      ],
+      "parser": "products"
+    },
+    "addFirstToCart": {
+      "steps": [
+        {
+          "type": "click",
+          "selector": "cartButton",
+          "waitMs": 300
+        },
+        {
+          "type": "evaluate",
+          "name": "cart",
+          "expression": "JSON.parse(localStorage.getItem('demo-cart') || '[]')"
+        }
+      ],
+      "parser": "cart"
+    }
+  },
+  "parsers": {
+    "products": {
+      "type": "javascript",
+      "source": "(input) => ({ items: input.products })"
+    },
+    "cart": {
+      "type": "javascript",
+      "source": "(input) => ({ items: input.cart })"
+    }
+  }
+}

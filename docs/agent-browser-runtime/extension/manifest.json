@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "Agent Browser Runtime Companion",
+  "version": "0.5.7",
+  "description": "Companion extension for Agent Browser Runtime: real Tab Groups, CDP bridge, coherent fingerprint policy, and session probes.",
+  "permissions": [
+    "tabs",
+    "tabGroups",
+    "storage",
+    "alarms",
+    "debugger",
+    "scripting"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "runtime-config.js",
+        "stealth-content.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN"
+    }
+  ]
+}

@@ -1,0 +1,106 @@
+{
+  "id": "xiaohongshu.feed.v1",
+  "name": "小红书 Feed 采集器",
+  "platform": "xiaohongshu",
+  "version": "0.1.0",
+  "description": "用于 Feed/搜索结果采集的选择器、操作和解析器。选择器故意设计为可配置的，因为小红书频繁更改 DOM 结构。",
+  "perception": {
+    "searchInput": {
+      "selector": "input[type='search'], input[placeholder*='搜索'], input[aria-label*='搜索']",
+      "description": "主搜索输入框。"
+    },
+    "noteCard": {
+      "selector": "section, div.note-item, div[class*='note'], div[class*='feed']",
+      "description": "候选 Feed 笔记卡片。"
+    },
+    "noteTitle": {
+      "selector": "a[title], div[class*='title'], span[class*='title']",
+      "description": "笔记卡片中的标题。"
+    },
+    "commentToggle": {
+      "selector": "button[class*='comment'], div[class*='comment'] button, [aria-label*='评论'], [title*='评论']",
+      "description": "评论展开触发器（可用时）。"
+    },
+    "commentItem": {
+      "selector": "div[class*='comment-item'], div[class*='CommentItem']",
+      "description": "评论行。"
+    }
+  },
+  "actions": {
+    "open": {
+      "steps": [
+        {
+          "type": "navigate",
+          "url": "{{url}}",
+          "waitMs": 2000
+        }
+      ]
+    },
+    "search": {
+      "steps": [
+        {
+          "type": "navigate",
+          "url": "https://www.xiaohongshu.com/search_result?keyword={{keyword}}",
+          "waitMs": 2500
+        },
+        {
+          "type": "waitForSelector",
+          "selector": "noteCard",
+          "timeoutMs": 10000
+        },
+        {
+          "type": "extract",
+          "name": "cards",
+          "selector": "noteCard",
+          "many": true,
+          "attribute": "textContent"
+        }
+      ],
+      "parser": "feedCards"
+    },
+    "scrollCollect": {
+      "steps": [
+        {
+          "type": "scroll",
+          "y": 1200,
+          "waitMs": 1500
+        },
+        {
+          "type": "extract",
+          "name": "cards",
+          "selector": "noteCard",
+          "many": true,
+          "attribute": "textContent"
+        }
+      ],
+      "parser": "feedCards"
+    },
+    "expandComments": {
+      "steps": [
+        {
+          "type": "click",
+          "selector": "commentToggle",
+          "waitMs": 1200
+        },
+        {
+          "type": "extract",
+          "name": "comments",
+          "selector": "commentItem",
+          "many": true,
+          "attribute": "textContent"
+        }
+      ],
+      "parser": "comments"
+    }
+  },
+  "parsers": {
+    "feedCards": {
+      "type": "javascript",
+      "source": "(input) => ({ items: (input.cards || []).filter(Boolean).map((text, index) => ({ index, rawText: text.replace(/\\s+/g, ' ').trim() })).filter((item) => item.rawText.length > 0) })"
+    },
+    "comments": {
+      "type": "javascript",
+      "source": "(input) => ({ comments: (input.comments || []).filter(Boolean).map((text) => text.replace(/\\s+/g, ' ').trim()) })"
+    }
+  }
+}

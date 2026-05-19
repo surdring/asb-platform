@@ -1,0 +1,62 @@
+name: asb-platform
+
+services:
+  chrome-runtime:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: asb-chrome-runtime
+    init: true
+    shm_size: "2gb"
+    environment:
+      ASB_VNC_ENABLED: "${ASB_VNC_ENABLED:-1}"
+      ASB_VNC_PORT: "${ASB_VNC_PORT:-5900}"
+      ASB_NOVNC_PORT: "${ASB_NOVNC_PORT:-6080}"
+      SCREEN_WIDTH: "${SCREEN_WIDTH:-1440}"
+      SCREEN_HEIGHT: "${SCREEN_HEIGHT:-1000}"
+      SCREEN_DEPTH: "${SCREEN_DEPTH:-24}"
+    volumes:
+      - ./data/browser-state/docker:/home/pwuser/profile
+    ports:
+      - "127.0.0.1:${CDP_HOST_PORT:-9223}:9222"
+      - "127.0.0.1:${NOVNC_HOST_PORT:-16080}:6080"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:9222/json/version"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  asb-broker:
+    build:
+      context: .
+      dockerfile: Dockerfile.broker
+    container_name: asb-broker
+    init: true
+    environment:
+      ASB_HOST: "0.0.0.0"
+      ASB_PORT: "8787"
+      ASB_DATA_DIR: "/data"
+      ASB_STEALTH_ENABLED: "${ASB_STEALTH_ENABLED:-1}"
+      ASB_STEALTH_EXCLUDED_HOSTS: "${ASB_STEALTH_EXCLUDED_HOSTS:-}"
+      ASB_CANVAS_NOISE_ENABLED: "${ASB_CANVAS_NOISE_ENABLED:-1}"
+      ASB_AUDIO_NOISE_ENABLED: "${ASB_AUDIO_NOISE_ENABLED:-1}"
+      ASB_WEBGL_VENDOR: "${ASB_WEBGL_VENDOR:-}"
+      ASB_WEBGL_RENDERER: "${ASB_WEBGL_RENDERER:-}"
+      ASB_CDP_ACCEPT_LANGUAGE: "${ASB_CDP_ACCEPT_LANGUAGE:-en-US,en;q=0.9}"
+      ASB_CDP_USER_AGENT: "${ASB_CDP_USER_AGENT:-}"
+      ASB_CDP_PLATFORM: "${ASB_CDP_PLATFORM:-}"
+      ASB_CDP_TIMEZONE: "${ASB_CDP_TIMEZONE:-}"
+      ASB_CDP_LOCALE: "${ASB_CDP_LOCALE:-}"
+      ASB_HUMANIZE_LEVEL: "${ASB_HUMANIZE_LEVEL:-standard}"
+      ASB_COOLDOWN_ENABLED: "${ASB_COOLDOWN_ENABLED:-1}"
+      ASB_FINGERPRINT_SEED: "${ASB_FINGERPRINT_SEED:-}"
+      ASB_FINGERPRINT_PLATFORM: "${ASB_FINGERPRINT_PLATFORM:-macos}"
+    volumes:
+      - ./data:/data
+    ports:
+      - "127.0.0.1:${BROKER_HOST_PORT:-8787}:8787"
+    depends_on:
+      chrome-runtime:
+        condition: service_healthy
+    restart: unless-stopped
